@@ -1,10 +1,11 @@
+// Diagnastic program of ESP32 and PICO All In One KIT 
+
 #include "DHT.h"
 #include <Wire.h>
 #include <OneWire.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
 #include "Adafruit_BMP3XX.h"
-#include "Adafruit_BME680.h"
 #include <DallasTemperature.h>
 #include <Adafruit_MPU6050.h>
 #include <Adafruit_SSD1306.h>
@@ -20,35 +21,26 @@
 #include "SD.h"
 #include "FS.h"
 
-
-#define ADCPIN                2        // 트리머
+#define ADCPIN                2        // 트리머 센서에 연결된 GPIO 핀
 #define DHTPIN                21       // DHT22 센서에 연결된 GPIO 핀
 #define DHTTYPE               DHT22   
 #define SEALEVELPRESSURE_HPA (1013.25) // BME280
-#define BMP_SCK               12       // BMP388
-#define BMP_MISO              13
-#define BMP_MOSI              11
-#define BMP_CS                41
 #define SOUND_SPEED           0.034    //소리 속도 정의
-#define SD_CS                 10       // MAX98357 Digital I/O used
-#define SPI_MOSI              11       // SD Card
-#define SPI_MISO              13
-#define SPI_SCK               12
-#define I2S_DOUT              14
-#define I2S_BCLK              18       // I2S
-#define I2S_LRC               45
-#define LED_PIN               48       // Pin to use to send signals to WS2812B
-#define LED_COUNT             10       // Number of WS2812B LEDs attached to the Arduino
+#define I2S_DOUT              14       // I2S 센서에 연결된 GPIO 핀
+#define I2S_BCLK              45        
+#define I2S_LRC               46
+#define LED_PIN               48       // WS2812B에 연결된 GPIO 핀
+#define LED_COUNT             10       // WS2812B LED개수
 #define SCREEN_WIDTH          128      // OLED 디스플레이 너비, 픽셀 단위
 #define SCREEN_HEIGHT         64       // OLED 디스플레이 높이, 픽셀 단위
 #define OLED_RESET            -1       // 리셋 핀 번호(또는 아두이노 리셋 핀을 공유하는 경우 -1)
 #define SCREEN_ADDRESS        0x3C     // OLED I2C 주소
-#define RXD2                  5
+#define RXD2                  5        // GPS센서에 연결된 GPIO 핀
 #define TXD2                  4
-#define PIR                   37
+#define PIR                   37       // PIR센서에 연결된 GPIO 핀
 #define LDR                   3        //포토레지스트용 아날로그 입력
 #define oneWireBus           16        // DS18B20 GPIO번호 셑
-#define trigPin              40        // HC SR04
+#define trigPin              40        // HC SR04센서에 연결된 GPIO 핀
 #define echoPin              36            
 
 
@@ -65,7 +57,7 @@ const int buttonPin4 = 38;  // GPIO번호 38
 const int ledPin1 =  45;    // GPIO번호 45
 const int ledPin2 =  46;    // GPIO번호 46
 const int ledPin3 =  48;    // GPIO번호 48
-const int ledPin4 =  17;    // GPIO번호 17
+const int ledPin4 =  40;    // GPIO번호 40
 const int buzzer_relay = 42;      // GPIO번호 42
 const int PWMFreq = 5000;
 const int PWMChannel = 0;
@@ -87,7 +79,6 @@ int pinStateCurrent = 0;    // 핀 현재상태
 
 Adafruit_BME280 bme;        // I2C 인터페이스 방식으로 사용
 Adafruit_BMP3XX bmp;
-Adafruit_BME680 bme_680;    // I2C
 Adafruit_MPU6050 mpu;       // MPU 6050
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);  // I2C에 연결된 SSD1306 디스플레이에 대한 선언
 Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);         // Setting up the NeoPixel library
@@ -100,27 +91,27 @@ Audio audio;
 TinyGPSPlus gps;
 HardwareSerial neogps(1);
 
-void IRAM_ATTR toggleLED1()
+void IRAM_ATTR toggleLED1() // 인터랍트 서비스 루틴
 {
-  detachInterrupt(buttonPin1);
+  //detachInterrupt(buttonPin1);
   digitalWrite(ledPin1, !digitalRead(ledPin1));
   digitalWrite(buzzer_relay, !digitalRead(buzzer_relay));
 }
 void IRAM_ATTR toggleLED2()
 {
-  detachInterrupt(buttonPin2);
+  //detachInterrupt(buttonPin2);
   digitalWrite(ledPin2, !digitalRead(ledPin2));
   digitalWrite(buzzer_relay, !digitalRead(buzzer_relay));
 }
 void IRAM_ATTR toggleLED3()
 {
-  detachInterrupt(buttonPin3);
+  //detachInterrupt(buttonPin3);
   digitalWrite(ledPin3, !digitalRead(ledPin3));
   digitalWrite(buzzer_relay, !digitalRead(buzzer_relay));
 }
 void IRAM_ATTR toggleLED4()
 {
-  detachInterrupt(buttonPin4);
+  //detachInterrupt(buttonPin4);
   digitalWrite(ledPin4, !digitalRead(ledPin4));
   digitalWrite(buzzer_relay, !digitalRead(buzzer_relay));
 }
@@ -130,11 +121,11 @@ void setup()
   Wire.begin();
   Serial.begin(9600);         // 시리얼전송 속도를 9600보로 셑
   Serial.println();
-  strip.clear(); // Set all pixel colors to 'off'
-  pinMode(buttonPin1, INPUT); // buttonPin을 INPUT으로 선언
-  pinMode(buttonPin2, INPUT); // buttonPin을 INPUT으로 선언
-  pinMode(buttonPin3, INPUT); // buttonPin을 INPUT으로 선언
-  pinMode(buttonPin4, INPUT); // buttonPin을 INPUT으로 선언
+  strip.clear();              // Set all pixel colors to 'off'
+  pinMode(buttonPin1, INPUT_PULLDOWN); // buttonPin을 INPUT으로 선언
+  pinMode(buttonPin2, INPUT_PULLDOWN); // buttonPin을 INPUT으로 선언
+  pinMode(buttonPin3, INPUT_PULLDOWN); // buttonPin을 INPUT으로 선언
+  pinMode(buttonPin4, INPUT_PULLDOWN); // buttonPin을 INPUT으로 선언
   pinMode(ledPin1, OUTPUT);   // ledPin을 OUTPUT으로 선언
   pinMode(ledPin2, OUTPUT);   // ledPin을 OUTPUT으로 선언
   pinMode(ledPin3, OUTPUT);   // ledPin을 OUTPUT으로 선언
@@ -144,8 +135,8 @@ void setup()
   pinMode(trigPin, OUTPUT); // HC-SR04 출력모드로 선언
   pinMode(echoPin, INPUT);  // HC-SR04 입력모드로 선언
 
-  strip.begin();           // Initialize NeoPixel object
-  strip.setBrightness(10); // Set BRIGHTNESS to about 4% (max = 255)
+  strip.begin();           // NeoPixel object 초기화
+  strip.setBrightness(10); // 밝기값 세팅 4% (max = 255)
   
 // Button, LED, Buzzer, Relay
   attachInterrupt(buttonPin1, toggleLED1, RISING);  // RED
@@ -156,12 +147,12 @@ void setup()
   Serial.println();
   Serial.println();  
   Serial.println("01. check switchs and leds, Press any key to escape");
-  while (Serial.available() == 0);    //wait until user presses any key and RETURN key
+  while (Serial.available() == 0);    // 어떤키와 리턴을 기다림
   
-  //detachInterrupt(buttonPin1);
-  //detachInterrupt(buttonPin2);
-  //detachInterrupt(buttonPin3);
-  //detachInterrupt(buttonPin4);
+  detachInterrupt(buttonPin1);
+  detachInterrupt(buttonPin2);
+  detachInterrupt(buttonPin3);
+  detachInterrupt(buttonPin4);
 
   digitalWrite(ledPin1, LOW);
   digitalWrite(ledPin2, LOW);
@@ -223,14 +214,14 @@ void setup()
   }
   delay(200);
 
-// BME680
+// BMP388
   Wire.beginTransmission(0x77);
   error = Wire.endTransmission();
     if (error == 0)   {
-      Serial.println("07. BME680 is ok"); // 정상경우
+      Serial.println("07. BMP388 is ok"); // 정상경우
   }
     else    {
-    Serial.println("07. BME680 - check soldering ???");
+    Serial.println("07. BMP388 - check soldering ???");
   }
   delay(200);
 
@@ -268,12 +259,14 @@ void setup()
   }
   delay(200);
 
-// BMP388
-  if (! bmp.begin_SPI(BMP_CS, BMP_SCK, BMP_MISO, BMP_MOSI)) {  // software SPI mode
-    Serial.println("10. BMP388 - check soldering ???");
+// PAJ7620-제스처센서
+  Wire.beginTransmission(0x73);
+  error = Wire.endTransmission();
+    if (error == 0)   {
+      Serial.println("10. PAJ7620 is ok"); // 정상경우
   }
-  else    {
-  Serial.println("10. BMP388 is ok");
+    else    {
+    Serial.println("10. PAJ7620 - check soldering ???");
   }
   delay(200);
 
@@ -308,42 +301,44 @@ void setup()
   Serial.print("13. HC-SR04  distance test ----->  ");
   for (int i = 0; i <= 10000; i++) {
   digitalWrite(trigPin, LOW);  // trigPin 초기화 및 초음파 방출과장
-  delayMicroseconds(2);
+  delayMicroseconds(3);
   digitalWrite(trigPin, HIGH); // trigPin에 HIGH출력
   delayMicroseconds(10);       // 10ms 딜레이
   digitalWrite(trigPin, LOW);  // trigPin에 LOW출력
   duration = pulseIn(echoPin, HIGH);  // 마이크로 세컨단위로 펄스길이를 읽어낸다
   distanceCmCurrent = duration * SOUND_SPEED/2;  // 펄스길이를 거리로 변환
-  //Serial.println(distanceCmCurrent);
+//  Serial.println(distanceCmCurrent);
   if (distanceCmCurrent < 1) { 
     Serial.println("not ok");
     break;
   }
-  else if ((distanceCmCurrent > 10) && (distanceCmCurrent < 20) ) { // 10-20cm 이면 escape
+  else if ((distanceCmCurrent > 10) && (distanceCmCurrent < 12) ) { // 10-12cm 이면 escape
     Serial.println("ok");
     break;
   }
+  delay(100);
    if (i >= 10000) {    // check end of for
     Serial.println("not ok !!!");
   }   
   }
   delay(200);
 
-// LDR - 
+// LDR 
   Serial.print("14. LDR  bright test ----->  ");
   for (int i = 0; i <= 500; i++) {
     LDR_Val = analogRead(LDR);   //LDR값 아날로그 읽기
-    if(LDR_Val > 2000) {        //광도가 어두운  경우
+//    Serial.println(LDR_Val);
+    if (LDR_Val > 4000) {        //광도가 어두운  경우
         digitalWrite(ledPin3,HIGH); /*LED Remains OFF*/
     }
-    else {
+    else if  (LDR_Val < 3500) {
         digitalWrite(ledPin4,HIGH);  // LED 켜짐 - LDR 값이 낮을때
     }
     if (digitalRead(ledPin3) && digitalRead(ledPin4)) {
       Serial.println("ok");
       break; // exit
     }
-    delay(500);      //1초마다 값 읽기 딜레이
+    delay(500);      //0.5초마다 값 읽기 딜레이
     if (i >= 500) {    // check end of for
     Serial.println("not ok !!!");
   }
@@ -373,41 +368,49 @@ void setup()
   }
     delay(200);
 
-} // end of setup
-  
-void loop() {
   // ADDRESSABLE LED
   strip.clear(); // Set all pixel colors to 'off'
   strip.setPixelColor(i, 0, 255, 0);  // Set the i-th LED to pure green:
   strip.show();                       // Send the updated pixel colors to the hardware.
   delay(200);                         // Pause before next pass through loop
-  Serial.println("16. check Addressable LEDs, Press any key to escape");
+  Serial.print("16. check Addressable LEDs, Press any key to escape, ");
   for(int i=0; i<LED_COUNT; i++) {   
     strip.setPixelColor(i, 0, 255, 0);  // Set the i-th LED to pure green:
     strip.show();   // Send the updated pixel colors to the hardware.
-    delay(100); // Pause before next pass through loop
+    delay(200); // Pause before next pass through loop
   }
   
+  Serial.begin(9600);         // 시리얼 buffer클리어
   //wait until user presses any key and RETURN key
-  Serial.begin(9600);
-  while (Serial.available() == 0);    
+  while (Serial.available() == 0);   
+  Serial.println(" LED is ok");
 
   // insert sd card recorded with "1.mp3"
-  pinMode(SD_CS, OUTPUT);      
-  digitalWrite(SD_CS, HIGH);
-  SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
-  if(!SD.begin(SD_CS))  {
-      Serial.println("17. SD card - check soldering");
-      while(true);  // 종료
+    SPI.begin(12, 13, 11); // clk, miso, mosi
+    for (int i = 0; i <= 10; i++) {
+    if (SD.begin(10)) {
+      break;
+    }
+     delay(100);
+     SPI.begin(12, 13, 11); // clk, miso, mosi
   }
-  Serial.println("17. SD card - ok");
+  //Serial.println(i);
+  if (i >= 10) {
+    Serial.println("SD CARD FAILED, OR NOT PRESENT!");
+    return;
+  } 
+
+  Serial.println("17. SD card is ok");
   audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
   audio.setVolume(21); // 0...21
   audio.connecttoFS(SD, "1.mp3");
-  Serial.println("18. if no sound, check MAX98357 !!!");
+  Serial.println("18. if no sound, check MAX98357 or Speaker !!!");
   while(1)  {
-  audio.loop();   
+    audio.loop();   
   }
-strip.begin();           // Initialize NeoPixel object
-strip.clear(); // Set all pixel colors to 'off'
+  strip.begin(); // Initialize NeoPixel object
+  strip.clear(); // Set all pixel colors to 'off'
+} // end of setup
+
+void loop() {
 }
