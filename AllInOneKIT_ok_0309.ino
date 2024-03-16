@@ -379,12 +379,17 @@ void setup()
   pinMode(SD_CS, OUTPUT);      
   digitalWrite(SD_CS, HIGH);
   SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);    
+  if(!SD.begin(SD_CS)){
+        Serial.println("17. SD Card Mount Failed");
+        return;  // 중지
+    }
+  Serial.println("17. SD Card ------> ok");
   SD.begin(SD_CS);
    
   audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
   audio.setVolume(21); // 0...21
-  audio.connecttoFS(SD, "1.mp3");// 1.mp3에 음악이 저장되어 있어야합니다  
-  Serial.println("17. if no sound, check MAX98357 or SD Card !!!");
+  audio.connecttoFS(SD, "1.mp3");// 1.mp3 파일음악이 저장되어 있어야합니다  
+  Serial.println("18. if no sound, check MAX98357 !!!");
 
 } // end of setup
 
