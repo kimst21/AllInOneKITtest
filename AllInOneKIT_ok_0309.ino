@@ -112,8 +112,8 @@ void setup()
   paj7620Init();
   Serial.begin(9600);         // 시리얼전송 속도를 9600보로 셑
   Serial.println();
-  strip.begin(); // Initialize NeoPixel object                       
-  strip.show(); // Initialize all pixels to 'off'
+  strip.begin(); // 네오픽셀 초기화                
+  strip.show();  // 모든 픽셀 OFF
 
 
   pinMode(buttonPin1, INPUT_PULLDOWN); // buttonPin을 INPUT으로 선언
@@ -130,7 +130,7 @@ void setup()
   pinMode(echoPin, INPUT);  // HC-SR04 입력모드로 선언
 
   strip.begin();           // NeoPixel object 초기화
-  strip.setBrightness(10); // 밝기값 세팅 4% (max = 255)
+  strip.setBrightness(10); // 밝기값 세팅 (max = 255)
   
 // Button, LED, Buzzer, Relay
   attachInterrupt(buttonPin1, toggleLED1, RISING);  // RED
@@ -241,12 +241,14 @@ void setup()
 
 // DHT
   dht.begin();
+  delay(2000);
   // 약250ms동안 습도, 온도를 읽는다 (최대 2초)
   float h = dht.readHumidity();
   float t = dht.readTemperature();
   float f = dht.readTemperature(true);
   if (isnan(h) || isnan(t) || isnan(f)) {
     Serial.println(F("09. DHT22 - check soldering ???"));
+    return;
   }
   else    {
   Serial.println("09. DHT22 is ok");
@@ -254,7 +256,7 @@ void setup()
   delay(200);
 
 // PAJ7620-제스처센서
-  uint8_t data = 0, data1 = 0, error;
+  uint8_t data = 0, error;
 	error = paj7620ReadReg(0x43, 1, &data);	 // 제스처 결과에 대해 Bank_0_Reg_0x43을 읽습니다.
 	if (!error) 
   {
@@ -357,7 +359,7 @@ void setup()
       Serial.println("ok");
       break; // exit
     }
-    delay(100);        //1초마다 값 읽기 딜레이
+    delay(100);        //0.1초마다 값 읽기 딜레이
     if (i >= 200) {    // check end of for
     Serial.println("not ok !!!");
   }
@@ -381,7 +383,7 @@ void setup()
   SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);    
   if(!SD.begin(SD_CS)){
         Serial.println("17. SD Card Mount Failed");
-        return;  // 중지
+        return;  // 중지 SD카드 불량
     }
   Serial.println("17. SD Card ------> ok");
   SD.begin(SD_CS);
