@@ -325,11 +325,11 @@ void setup()
   Serial.print("14. LDR  bright test ----->  ");
   for (int i = 0; i <= 500; i++) {
     LDR_Val = analogRead(LDR);   //LDR값 아날로그 읽기
-//    Serial.println(LDR_Val);
-    if (LDR_Val > 4000) {        //광도가 어두운  경우
+//    Serial.println(LDR_Val); 값을 출력하여 확인 후에 상위값과 하위값을 조정
+    if (LDR_Val > 3000) {        //광도가 어두운  경우
         digitalWrite(ledPin3,HIGH); /*LED Remains OFF*/
     }
-    else if  (LDR_Val < 3500) {
+    else if  (LDR_Val < 1000) {
         digitalWrite(ledPin4,HIGH);  // LED 켜짐 - LDR 값이 낮을때
     }
     if (digitalRead(ledPin3) && digitalRead(ledPin4)) {
