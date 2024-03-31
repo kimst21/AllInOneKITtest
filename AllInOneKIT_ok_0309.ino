@@ -1,5 +1,4 @@
 // Diagnastic program of ESP32 and PICO All In One KIT 
-
 #include "DHT.h"
 #include <Wire.h>
 #include <OneWire.h>
@@ -325,8 +324,9 @@ void setup()
   Serial.print("14. LDR  bright test ----->  ");
   for (int i = 0; i <= 500; i++) {
     LDR_Val = analogRead(LDR);   //LDR값 아날로그 읽기
-//    Serial.println(LDR_Val); 값을 출력하여 확인 후에 상위값과 하위값을 조정
-    if (LDR_Val > 3000) {        //광도가 어두운  경우
+//    Serial.println(LDR_Val);     // 값을 출력하여 확인 후에 상위값과 하위값을 조정하세요'
+
+    if (LDR_Val > 2500) {        //광도가 어두운  경우
         digitalWrite(ledPin3,HIGH); /*LED Remains OFF*/
     }
     else if  (LDR_Val < 1000) {
@@ -395,6 +395,9 @@ void setup()
 
 } // end of setup
 
+void loop() {
+  audio.loop();   
+}
 void loop() {
   audio.loop();   
 }
