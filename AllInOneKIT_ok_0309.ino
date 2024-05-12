@@ -398,6 +398,3 @@ void setup()
 void loop() {
   audio.loop();   
 }
-void loop() {
-  audio.loop();   
-}
