@@ -30,10 +30,10 @@
 #define SPI_MISO              13
 #define SPI_SCK               12
 #define SOUND_SPEED           0.034    //소리 속도 정의
-#define I2S_DOUT              14       // I2S 센서에 연결된 GPIO 핀
-#define I2S_BCLK              45        
+#define I2S_DOUT              48       // I2S 센서에 연결된 GPIO 핀
+#define I2S_BCLK              40       
 #define I2S_LRC               46
-#define LED_PIN               48       // WS2812B에 연결된 GPIO 핀
+#define LED_PIN               45       // WS2812B에 연결된 GPIO 핀
 #define LED_COUNT             10       // WS2812B LED개수
 #define SCREEN_WIDTH          128      // OLED 디스플레이 너비, 픽셀 단위
 #define SCREEN_HEIGHT         64       // OLED 디스플레이 높이, 픽셀 단위
@@ -43,9 +43,9 @@
 #define TXD2                  4
 #define PIR                   37       // PIR센서에 연결된 GPIO 핀
 #define LDR                   3        //포토레지스트용 아날로그 입력
-#define oneWireBus           16        // DS18B20 GPIO번호 셑
-#define trigPin              40        // HC SR04센서에 연결된 GPIO 핀
-#define echoPin              36            
+#define oneWireBus            16       // DS18B20 GPIO번호 셑
+#define trigPin               45       // HC SR04센서에 연결된 GPIO 핀
+#define echoPin               36            
 
 
 int LDR_Val =  0;            //포토레지스트 값을 저장할 변수
@@ -293,33 +293,21 @@ void setup()
   delay(200);
 
 // PIR
-  pinMode(motionSensor, INPUT);     // declare sensor as input
-  delay(20000);
-  int pirState = LOW;             // we start, assuming no motion detected
-  int pirVal = 0;                    // variable for reading the pin status
-  for (int i = 0; i <= 100; i++) {
-    pirVal = digitalRead(motionSensor);  // read input value
-    if (pirVal == HIGH) {            // check if the input is HIGH
-      digitalWrite(ledPin3, HIGH);  // turn LED ON
-      if (pirState == LOW) {
-      // we have just turned on
-      // We only want to print on the output change, not state
-          pirState = HIGH;
-    }
-  } else {
-      digitalWrite(ledPin3, LOW); // turn LED OFF
-      if (pirState == HIGH) {
-           // we have just turned of
-        Serial.println("12. PIR is ok");
-           // We only want to print on the output change, not state
-        pirState = LOW;
-    }
-  }
-  if (i >= 100) {   // check end of for
-    Serial.println("12. PIR is not ok !!!");
+  pinMode(motionSensor, INPUT);     // PIR
+  Serial.print("12. PIR   test -----> ");
+//  delay(20000); /* 초기 딜레이 */
+    for (int i = 0; i <= 10000; i++) {
+    bool isDetected = digitalRead(motionSensor);
+    if(isDetected){
+    Serial.println("ok");
     break;
-  }   
-}
+  }
+  delay(100);
+   if (i >= 10000) {    // check end of for
+    Serial.println("not ok !!!");
+    break;
+  }  
+  } 
   delay(500);
 
 // HC-SR04
@@ -353,10 +341,10 @@ void setup()
   for (int i = 0; i <= 100; i++) {
     LDR_Val = analogRead(LDR);   //LDR값 아날로그 읽기
 //    Serial.println(LDR_Val);
-    if (LDR_Val > 4000) {        //광도가 어두운  경우
+    if (LDR_Val > 2500) {        //광도가 어두운  경우
         digitalWrite(ledPin3,HIGH); /*LED Remains OFF*/
     }
-    else if  (LDR_Val < 3500) {
+    else if  (LDR_Val < 500) {
         digitalWrite(ledPin4,HIGH);  // LED 켜짐 - LDR 값이 낮을때
     }
     if (digitalRead(ledPin3) && digitalRead(ledPin4)) {
@@ -395,24 +383,18 @@ void setup()
 
   // ADDRESSABLE LED
   strip.begin(); // Initialize NeoPixel object
-  Serial.begin(9600); // 시리얼버퍼 클리어
-                        
+  Serial.begin(9600); // 시리얼버퍼 클리어                       
 
   Serial.println("16. check Addressable LEDs, Press any key to escape, ");
   for(int i=0; i<LED_COUNT; i++) {   
      strip.setPixelColor(i, 0, 0, 255);  // Set the i-th LED to pure green:
      strip.show(); 
-     delay(500);                      // Send the updated pixel colors to the hardware.
+     delay(200);                         // Send the updated pixel colors to the hardware.
   }
   while(Serial.available() > 0) {
     char t = Serial.read();
   }
   while (Serial.available() == 0);    // 어떤키와 리턴을 기다림
-
-    for(int i=0; i<LED_COUNT; i++) {   
-     strip.setPixelColor(i, 0, 0, 0);    // 전체 클리어  
-     strip.show();                       // Send the updated pixel colors to the hardware.
-  }
 
     pinMode(SD_CS, OUTPUT);      
     digitalWrite(SD_CS, HIGH);
