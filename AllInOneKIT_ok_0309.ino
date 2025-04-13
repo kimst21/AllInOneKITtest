@@ -140,7 +140,7 @@ void setup() {
 
   waitForAllButtons();                // 모든 버튼 입력 대기
   Serial.println("모든 버튼이 눌렸습니다!");
-  Serial.println("릴레이 소리가 2번 납니다");
+  Serial.println("릴레이 소리가 2번 납니다!");
   // 릴레이 2회 클릭 (테스트용)
   digitalWrite(relay, HIGH); delay(500); digitalWrite(relay, LOW); delay(500);
   digitalWrite(relay, HIGH); delay(500); digitalWrite(relay, LOW);
@@ -162,7 +162,7 @@ void setup() {
   if (nDevices == 0) Serial.println("No I2C devices found\n");
   Serial.println(nDevices);
   delay(3000);
-
+  Serial.println("딩동 소리가 납니다!");
   playDingDong();                     // 부저 테스트
 
   // GPS 데이터 수신 테스트
